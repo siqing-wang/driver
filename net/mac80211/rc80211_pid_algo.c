@@ -64,6 +64,16 @@
  * RC_PID_ARITH_SHIFT.
  */
 
+#ifdef UW
+int rate_table[8][8] = { {4,5,6,7,8,9,10,11},
+						{7,4,9,6,11,10,5,8},
+						{10,9,6,7,8,11,4,5},
+						{9,10,7,6,11,4,5,8},
+						{10,7,8,5,4,11,6,9},
+						{7,10,9,8,11,6,5,4},
+						{8,5,4,11,6,7,10,9},
+						{11,6,9,4,5,8,7,10}};
+#endif
 
 /* Adjust the rate while ensuring that we won't switch to a lower rate if it
  * exhibited a worse failed frames behaviour and we'll choose the highest rate
@@ -80,9 +90,36 @@ static void rate_control_pid_adjust_rate(struct ieee80211_supported_band *sband,
 	band = sband->band;
 	n_bitrates = sband->n_bitrates;
 
+#ifdef UW
+	if (spinfo->round_offset == 7)
+	{
+		spinfo->round_idx = (spinfo->round_idx + 1) % 8;
+	}
+	spinfo->round_offset = (spinfo->round_offset + 1) % 8;
+#endif
+
 	/* Map passed arguments to sorted values. */
 	cur_sorted = rinfo[cur].rev_index;
+	
+#ifdef UW
+	new_sorted = rinfo[rate_table[spinfo->round_idx][spinfo->round_offset]].rev_index;
+
+	tmp= new_sorted;
+	if ( tmp >= n_bitrates)
+		tmp=0;
+
+	do {
+		if (rate_supported(sta, band, rinfo[tmp].index)) {
+			spinfo->txrate_idx = rinfo[tmp].index;
+			break;
+		}
+		tmp++;
+	} while (tmp < n_bitrates && tmp >= 0);
+	
+	return;
+#else
 	new_sorted = cur_sorted + adj;
+#endif
 
 	/* Check limits. */
 	if (new_sorted < 0)
@@ -230,8 +267,11 @@ static void rate_control_pid_tx_status(void *priv, struct ieee80211_supported_ba
 
 	/* Ignore all frames that were sent with a different rate than the rate
 	 * we currently advise mac80211 to use. */
+#ifdef UW
+#else
 	if (info->status.rates[0].idx != spinfo->txrate_idx)
 		return;
+#endif
 
 	spinfo->tx_num_xmit++;
 
@@ -267,6 +307,11 @@ rate_control_pid_get_rate(void *priv, struct ieee80211_sta *sta,
 	struct rc_pid_sta_info *spinfo = priv_sta;
 	int rateidx;
 
+#ifdef UW
+	struct rc_pid_info *pinfo = priv;
+	struct rc_pid_rateinfo *rinfo = pinfo->rinfo;
+#endif
+
 	if (txrc->rts)
 		info->control.rates[0].count =
 			txrc->hw->conf.long_frame_max_tx_count;
@@ -277,6 +322,13 @@ rate_control_pid_get_rate(void *priv, struct ieee80211_sta *sta,
 	/* Send management frames and NO_ACK data using lowest rate. */
 	if (rate_control_send_low(sta, priv_sta, txrc))
 		return;
+
+#ifdef UW
+	rate_control_pid_adjust_rate(sband, sta, spinfo, 1, rinfo);
+	
+	if (spinfo->round_offset == 7)
+		txrc->rts = !txrc->rts;
+#endif
 
 	rateidx = spinfo->txrate_idx;
 
@@ -332,6 +384,11 @@ rate_control_pid_rate_init(void *priv, struct ieee80211_supported_band *sband,
 		if (!s)
 			break;
 	}
+
+#ifdef UW
+	spinfo->round_idx=0;
+	spinfo->round_offset=0;
+#endif
 
 	spinfo->txrate_idx = rate_lowest_index(sband, sta);
 }

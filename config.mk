@@ -1,3 +1,5 @@
+export CONFIG_UW=1
+
 ifeq ($(wildcard $(KLIB_BUILD)/.config),)
 # These will be ignored by compat autoconf
  export CONFIG_PCI=y
@@ -167,12 +169,23 @@ endif #CONFIG_COMPAT_KERNEL_2_6_33
 # export CONFIG_MAC80211_MLME_DEBUG=y
 
 # choose between pid and minstrel as default rate control algorithm
+ifdef CONFIG_UW
+export CONFIG_MAC80211_RC_DEFAULT=pid
+export CONFIG_MAC80211_RC_DEFAULT_PID=y
+endif #CONFIG_UW
+ifndef CONFIG_UW
 export CONFIG_MAC80211_RC_DEFAULT=minstrel_ht
 export CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
+endif #CONFIG_UW
 # export CONFIG_MAC80211_RC_DEFAULT_PID=y
 # This is the one used by our compat-drivers net/mac80211/rate.c
 # in case you have and old kernel which is overriding this to pid.
+ifdef CONFIG_UW
+export CONFIG_COMPAT_MAC80211_RC_DEFAULT=pid
+endif #CONFIG_UW
+ifndef CONFIG_UW
 export CONFIG_COMPAT_MAC80211_RC_DEFAULT=minstrel_ht
+endif #CONFIG_UW
 export CONFIG_MAC80211_RC_PID=y
 export CONFIG_MAC80211_RC_MINSTREL=y
 export CONFIG_MAC80211_RC_MINSTREL_HT=y
@@ -280,7 +293,9 @@ export CONFIG_ATH9K_COMMON=m
 # as default once we get minstrel properly tested and blessed by
 # our systems engineering team. CCK rates also need to be used
 # for long range considerations.
+ifndef CONFIG_UW
 export CONFIG_COMPAT_ATH9K_RATE_CONTROL=y
+endif #CONFIG_UW
 
 export CONFIG_ATH9K_BTCOEX_SUPPORT=y
 

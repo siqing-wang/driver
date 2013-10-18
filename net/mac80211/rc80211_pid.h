@@ -176,6 +176,11 @@ struct rc_pid_sta_info {
 	u32 tx_num_failed;
 	u32 tx_num_xmit;
 
+#ifdef UW
+	int round_idx;
+	int round_offset;
+#endif
+
 	int txrate_idx;
 
 	/* Average failed frames percentage error (i.e. actual vs. target

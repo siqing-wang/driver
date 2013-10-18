@@ -60,10 +60,18 @@
 #define INIT_CWMIN      15
 #define INIT_CWMIN_11B  31
 #define INIT_CWMAX      1023
+
+#ifdef UW
+#define INIT_SH_RETRY   1
+#define INIT_LG_RETRY   1
+#define INIT_SSH_RETRY  1
+#define INIT_SLG_RETRY  1
+#else
 #define INIT_SH_RETRY   10
 #define INIT_LG_RETRY   10
 #define INIT_SSH_RETRY  32
 #define INIT_SLG_RETRY  32
+#endif
 
 #define ATH9K_SLOT_TIME_6 6
 #define ATH9K_SLOT_TIME_9 9

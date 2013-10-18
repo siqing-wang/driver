@@ -683,6 +683,10 @@ static void ieee80211_scan_state_resume(struct ieee80211_local *local,
 	local->next_scan_state = SCAN_SET_CHANNEL;
 }
 
+#ifdef UW
+int counter=0;
+#endif
+
 void ieee80211_scan_work(struct work_struct *work)
 {
 	struct ieee80211_local *local =
@@ -695,6 +699,11 @@ void ieee80211_scan_work(struct work_struct *work)
 
 	sdata = rcu_dereference_protected(local->scan_sdata,
 					  lockdep_is_held(&local->mtx));
+
+#ifdef UW
+	if (counter > 1)
+		goto out_complete;
+#endif
 
 	/* When scanning on-channel, the first-callback means completed. */
 	if (test_bit(SCAN_ONCHANNEL_SCANNING, &local->scanning)) {
@@ -778,6 +787,11 @@ void ieee80211_scan_work(struct work_struct *work)
 out_complete:
 	hw_scan = test_bit(SCAN_HW_SCANNING, &local->scanning);
 	__ieee80211_scan_completed(&local->hw, aborted, hw_scan);
+	
+#ifdef UW
+	counter++;
+#endif
+
 out:
 	mutex_unlock(&local->mtx);
 }

@@ -686,6 +686,13 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
 	 */
 	rate_control_get_rate(tx->sdata, tx->sta, &txrc);
 
+#ifdef UW
+	if (txrc.rts)
+		tx->local->hw.wiphy->rts_threshold = 1000;
+	else
+		tx->local->hw.wiphy->rts_threshold = 2000;
+#endif
+
 	if (unlikely(info->control.rates[0].idx < 0))
 		return TX_DROP;
 
