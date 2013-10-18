@@ -76,6 +76,7 @@ $(error "The path to this compat-drivers directory has spaces in it." \
 endif
 
 export CFLAGS += \
+	-DUW=1 \
         -DCOMPAT_BASE="\"$(shell cat $(PWD)/.compat_base)\"" \
         -DCOMPAT_BASE_TREE="\"$(shell cat $(PWD)/.compat_base_tree)\"" \
         -DCOMPAT_BASE_TREE_VERSION="\"$(shell cat $(PWD)/.compat_base_tree_version)\"" \
