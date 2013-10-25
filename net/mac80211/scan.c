@@ -701,7 +701,7 @@ void ieee80211_scan_work(struct work_struct *work)
 					  lockdep_is_held(&local->mtx));
 
 #ifdef UW
-	if (counter > 1)
+	if (counter > 2)
 		goto out_complete;
 #endif
 
